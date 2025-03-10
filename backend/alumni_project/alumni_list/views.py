@@ -9,7 +9,7 @@ class AlumniList(APIView):     #This class is used to get all the alumni details
     def get(self, request):
         alumni = Alumni.objects.all()
         serializer = AlumniSerializer(alumni, many=True)
-        return Response({"alumni":serializer.data})
+        return Response(serializer.data)
 
     def post(self, request):
         data=request.data.get("alumni").copy()
