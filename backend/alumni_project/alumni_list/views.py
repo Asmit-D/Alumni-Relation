@@ -1,15 +1,22 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
 from .models import *
 from .serializer import *
-
+from .permissions import IsEditor
 class AlumniList(APIView):     #This class is used to get all the alumni details and to add new alumni details with some or all of the entrance exam, education and work profile details
+
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [AllowAny()]
+        return [IsEditor()]
 
     def get(self, request):
         alumni = Alumni.objects.all()
         serializer = AlumniSerializer(alumni, many=True)
-        return Response(serializer.data)
+        choices = [choice[1] for choice in Alumni.DOMAIN_CHOICES]
+        return Response({ "alumni": serializer.data, "choices": choices })
 
     def post(self, request):
         data=request.data.get("alumni").copy()
@@ -55,6 +62,12 @@ class Alumnidetail(APIView):    #This class is used to get the details of a part
         return Response({ "alumni": Alumniserializer.data, "entrance_exam": EntranceExamserializer.data, "education": Educationserializer.data, "work_profile": WorkProfileserializer.data })
 
 class Alumniview(APIView):       #This class is used to update and delete alumni details
+
+    def get_permissions(self):
+        if self.request.method == "PUT" or self.request.method == "DELETE":
+            return [IsEditor()]
+        return [AllowAny()]
+    
     def get_object(self, pk):
         try:
             return Alumni.objects.get(pk=pk)
@@ -81,6 +94,12 @@ class Alumniview(APIView):       #This class is used to update and delete alumni
         return Response({ "error": "Alumni not found" }, status=status.HTTP_404_NOT_FOUND)
 
 class EntranceExamview(APIView):    #This class is used to add, update and delete entrance exam details of an alumni
+    
+    def get_permissions(self):
+        if self.request.method == "PUT" or self.request.method == "DELETE" or self.request.method == "POST" :
+            return [IsEditor()]
+        return [AllowAny()]
+
     def get_object(self, pk):
         try:
             return Alumni.objects.get(pk=pk)
@@ -115,6 +134,12 @@ class EntranceExamview(APIView):    #This class is used to add, update and delet
         return Response({ "error": "Entrance Exam not found" }, status=status.HTTP_404_NOT_FOUND)
 
 class Educationview(APIView):     #This class is used to add, update and delete education details of an alumni
+    
+    def get_permissions(self):
+        if self.request.method == "PUT" or self.request.method == "DELETE" or self.request.method == "POST" :
+            return [IsEditor()]
+        return [AllowAny()]
+
     def get_object(self, pk):
         try:
             return Alumni.objects.get(pk=pk)
@@ -149,6 +174,12 @@ class Educationview(APIView):     #This class is used to add, update and delete 
         return Response({ "error": "Education not found" }, status=status.HTTP_404_NOT_FOUND)
 
 class WorkProfileview(APIView):     #This class is used to add, update and delete work profile details of an alumni
+    
+    def get_permissions(self):
+        if self.request.method == "PUT" or self.request.method == "DELETE" or self.request.method == "POST" :
+            return [IsEditor()]
+        return [AllowAny()]
+    
     def get_object(self, pk):
         try:
             return Alumni.objects.get(pk=pk)

@@ -1,25 +1,65 @@
-import React from 'react'
-import { useLoaderData } from 'react-router-dom'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx'
-import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar.jsx'
-import { Button } from '@/components/ui/button.jsx'
-import { Badge } from "@/components/ui/badge"
+import React,{ useState, useEffect } from 'react';
+import axios from 'axios';
+import { useLoaderData, useParams } from 'react-router-dom';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar.jsx';
+import { Button } from '@/components/ui/button.jsx';
+import { Badge } from "@/components/ui/badge";
 import { FaLinkedin, FaXTwitter } from "react-icons/fa6";
-import { Building2, Mail, MapPin, GraduationCap, Award, Briefcase } from "lucide-react"
+import { Building2, Mail, MapPin, GraduationCap, Award, Briefcase } from "lucide-react";
+import { useAuth } from '../contexts/auth';
+import axiosInstance from '@/utils/axiosInstance.js'
 
 export default function AlumniPage() {
-  const data = useLoaderData();
+  const { id } = useParams();
+  const [data, setData] = useState(null);
+  const { token } = useAuth();
+  async function load() {
+    if (!token) {
+      // Handle case when token is not available
+      console.log("No token available, cannot load alumni data.");
+      return null;
+    }
+    try {
+      const response = await axiosInstance.get(`alumni/${id}/`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      setData(response.data);
+      console.log("Data loaded successfully:", response.data);
+    } catch (error) {
+      console.log(error);
+      console.log("Error loading alumni data, setting data to null.");
+      
+      setData(null); // Set data to null if there's an error
+    }
+  }
+  useEffect(() => {
+    load();
+  }, [token]);
 
+  if (data === null) {
+    return (
+      <div className='bg-gray-900 min-h-screen'>
+        <div className='flex flex-col rounded-t-xl px-20 pt-8 pb-2'>
+          <div className='flex flex-row items-center justify-center text-3xl text-white/60 bg-white/15 border-t border-stone-800 px-4 py-2'>
+            Unable to connect to server!!
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
-    <div className='dark min-h-screen pb-6 bg-gray-900'>
+    <div className='dark min-h-screen pb-6 bg-black'>
       <div className='text-5xl font-semibold text-zinc-100 px-16 pt-10 '>Alumni Details</div>
-      <Card className="mx-20 mt-8  bg-black">
+      <Card className="mx-20 mt-8  bg-gray-900">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-10">
             <div className="flex flex-col items-center md:items-start gap-4">
               <Avatar className="h-24 w-24 md:h-32 md:w-32">
-                <AvatarImage src={`http://127.0.0.1:8000/${data.alumni.dp}`} className="object-cover" alt={data.alumni.name} />
-                <AvatarFallback className="text-2xl">{data.alumni.name}</AvatarFallback>
+                <AvatarImage src={`http://127.0.0.1:8000/${data.alumni?.dp}`} className="object-cover" alt={data.alumni?.name} />
+                <AvatarFallback className="text-2xl">{data.alumni?.name}</AvatarFallback>
               </Avatar>
 
               <div className="flex gap-2">
@@ -64,7 +104,7 @@ export default function AlumniPage() {
         </CardContent>
       </Card>
       
-      <Card className="mx-20 mt-8 bg-black">
+      <Card className="mx-20 mt-8 bg-gray-900">
         <CardHeader>
             <CardTitle className="flex items-center text-2xl gap-2">
               <Award className="h-5 w-5" />
@@ -158,3 +198,24 @@ export default function AlumniPage() {
     </div>
   )
 }
+
+// export async function alumniPageLoader({params}) {
+//   const token = localStorage.getItem('token');
+//   if (!token) {
+//     return null; // Handle missing token
+//   }
+//   if (!params.id) {
+//     return null; // Handle missing ID
+//   }
+//   try {
+//     const response = await axiosInstance.get(`alumni/${params.id}/`,{
+//       headers: {
+//         'Authorization': `Bearer ${token}`
+//       }
+//     });
+//     return response.data;
+//   } catch (error) {
+//     console.log(error);
+//     return null;
+//   }
+// }

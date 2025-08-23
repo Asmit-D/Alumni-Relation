@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,6 +28,10 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(seconds=3),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
 
 # Application definition
 
@@ -39,10 +44,12 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'alumni_list.apps.AlumniListConfig',
     'rest_framework',
-    'corsheaders'
+    'corsheaders',
+    'rest_framework_simplejwt',
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -50,7 +57,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'alumni_project.urls'
@@ -70,6 +76,12 @@ TEMPLATES = [
         },
     },
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    )
+}
 
 WSGI_APPLICATION = 'alumni_project.wsgi.application'
 
@@ -102,7 +114,12 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-CORS_ALLOW_ALL_ORIGINS = True
+# Turn OFF global wildcard
+CORS_ALLOW_ALL_ORIGINS = True  
+
+
+# Allow cookies / credentials
+CORS_ALLOW_CREDENTIALS = True
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -128,3 +145,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+SESSION_SAVE_EVERY_REQUEST = True
+
+SESSION_COOKIE_SAMESITE = 'Lax'  # or 'None' for cross-site with HTTPS
+SESSION_COOKIE_SECURE = False    # or True with HTTPS
+
+CSRF_COOKIE_SAMESITE = 'Lax'
+CSRF_COOKIE_SECURE = False
+# settings.py
+SESSION_COOKIE_HTTPONLY = True
