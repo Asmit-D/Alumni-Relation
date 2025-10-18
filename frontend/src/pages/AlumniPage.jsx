@@ -1,16 +1,16 @@
-import React,{ useState, useEffect } from 'react';
-import axios from 'axios';
-import { useLoaderData, useParams } from 'react-router-dom';
+import  { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card.jsx';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar.jsx';
 import { Button } from '@/components/ui/button.jsx';
 import { Badge } from "@/components/ui/badge";
 import { FaLinkedin, FaXTwitter } from "react-icons/fa6";
 import { Building2, Mail, MapPin, GraduationCap, Award, Briefcase } from "lucide-react";
-import { useAuth } from '../contexts/auth';
-import axiosInstance from '@/utils/axiosInstance.js'
+import { useAuth } from '../context/AuthContext.jsx';
+import useProtectedAxios from "../hooks/useProtectedAxios.js";
 
 export default function AlumniPage() {
+  const protectedAxios = useProtectedAxios();
   const { id } = useParams();
   const [data, setData] = useState(null);
   const { token } = useAuth();
@@ -21,11 +21,7 @@ export default function AlumniPage() {
       return null;
     }
     try {
-      const response = await axiosInstance.get(`alumni/${id}/`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const response = await protectedAxios.get(`alumni/${id}/`);
       setData(response.data);
       console.log("Data loaded successfully:", response.data);
     } catch (error) {
@@ -37,7 +33,7 @@ export default function AlumniPage() {
   }
   useEffect(() => {
     load();
-  }, [token]);
+  }, []);
 
   if (data === null) {
     return (

@@ -1,19 +1,18 @@
 import { Button } from '../ui/button'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
-import { useAuth } from '../../contexts/auth'
+import axios from '../../utils/axiosInstance.js'
+import { useAuth } from '../../hooks/useAuth.js'
+import { useNavigate } from 'react-router-dom'
 
 function Navbar() {
-    const {token, setToken, setIsEditor} = useAuth();
+    const {token} = useAuth();
+    const navigate = useNavigate();
     const handleLogout = () => {
         console.log('logging out');
-
-        setToken(null);
-        setIsEditor(false);
-
-        axios.post(import.meta.env.VITE_BASE_URL + 'logout/')
+        axios.post('logout/')
         .then((response) => {
-            console.log(response.data);
+            navigate('/login', {replace: true});
+            console.log('Logged out successfully');
         })
         .catch((error) => {console.log(error);})
     }
