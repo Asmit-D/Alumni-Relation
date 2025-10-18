@@ -1,2 +1,66 @@
-backend/alumni_project/db.sqlite3
+# =========================
+# Python / Django
+# =========================
 *.pyc
+__pycache__/
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+*.pot
+*.py[cod]
+*.swp
+*.swo
+*.env
+*.venv
+.env
+.venv/
+instance/
+celerybeat-schedule
+*.egg-info/
+dist/
+build/
+docs/_build/
+*.cover
+htmlcov/
+.coverage
+coverage.xml
+*.mo
+*.DS_Store
+*.idea/
+.vscode/
+
+# Django media/uploads
+media/
+staticfiles/
+
+# Django migrations (optional: usually you keep them)
+*/migrations/*.pyc
+*/migrations/*.py
+!*/migrations/__init__.py
+
+# =========================
+# Node / React
+# =========================
+# Node dependencies
+node_modules/
+
+# Build output
+build/
+dist/
+
+# Environment variables
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+.DS_Store
+*.swp
