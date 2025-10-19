@@ -6,20 +6,15 @@ import { Button } from '@/components/ui/button.jsx';
 import { Badge } from "@/components/ui/badge";
 import { FaLinkedin, FaXTwitter } from "react-icons/fa6";
 import { Building2, Mail, MapPin, GraduationCap, Award, Briefcase } from "lucide-react";
-import { useAuth } from '../context/AuthContext.jsx';
 import useProtectedAxios from "../hooks/useProtectedAxios.js";
 
 export default function AlumniPage() {
   const protectedAxios = useProtectedAxios();
   const { id } = useParams();
   const [data, setData] = useState(null);
-  const { token } = useAuth();
+  const BASE_URL = import.meta.env.VITE_BASE_URL;
+
   async function load() {
-    if (!token) {
-      // Handle case when token is not available
-      console.log("No token available, cannot load alumni data.");
-      return null;
-    }
     try {
       const response = await protectedAxios.get(`alumni/${id}/`);
       setData(response.data);
@@ -27,7 +22,6 @@ export default function AlumniPage() {
     } catch (error) {
       console.log(error);
       console.log("Error loading alumni data, setting data to null.");
-      
       setData(null); // Set data to null if there's an error
     }
   }
@@ -54,7 +48,7 @@ export default function AlumniPage() {
           <div className="flex flex-col md:flex-row gap-10">
             <div className="flex flex-col items-center md:items-start gap-4">
               <Avatar className="h-24 w-24 md:h-32 md:w-32">
-                <AvatarImage src={`http://127.0.0.1:8000/${data.alumni?.dp}`} className="object-cover" alt={data.alumni?.name} />
+                <AvatarImage src={`${BASE_URL+data.alumni?.dp}`} className="object-cover" alt={data.alumni?.name} />
                 <AvatarFallback className="text-2xl">{data.alumni?.name}</AvatarFallback>
               </Avatar>
 

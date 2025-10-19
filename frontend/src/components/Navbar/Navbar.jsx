@@ -5,12 +5,13 @@ import { useAuth } from '../../hooks/useAuth.js'
 import { useNavigate } from 'react-router-dom'
 
 function Navbar() {
-    const {token} = useAuth();
+    const {token, setToken} = useAuth();
     const navigate = useNavigate();
     const handleLogout = () => {
         console.log('logging out');
         axios.post('logout/')
         .then((response) => {
+            setToken(null);
             navigate('/login', {replace: true});
             console.log('Logged out successfully');
         })

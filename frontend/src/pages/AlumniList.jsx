@@ -12,6 +12,7 @@ export default function AlumniList() {
 	const [data, setData] = useState({});
 	const [search, setSearch] = useState("");
 	const [selectedChoices, setSelectedChoices] = useState([]);
+	const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 	async function load() {
 		try {
@@ -39,8 +40,8 @@ export default function AlumniList() {
 			</div>
 		);
 	}
-	const Alumni = data.alumni || [];
-	const choices = data.choices || [];
+	const Alumni = data?.alumni || [];
+	const choices = data?.choices || [];
 
 	const handleToggleChange = (choice) => {
 		setSelectedChoices((prev) => {
@@ -126,7 +127,7 @@ export default function AlumniList() {
 												{alumni.dp ? (
 													<div>
 														<AvatarImage
-															src={`http://127.0.0.1:8000/${alumni.dp}`}
+															src={`${BASE_URL}${alumni.dp}`}
 															className="object-cover"
 															alt={alumni.name}
 														/>

@@ -1,4 +1,3 @@
-import { useState, useEffect } from "react";
 import Layout from "./Layout.jsx";
 import AlumniList from "./pages/AlumniList.jsx";
 import AlumniPage from "./pages/AlumniPage.jsx";
@@ -10,22 +9,23 @@ import {
 	Route,
 } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext.jsx";
+import PersistLogin from "./components/PersistLogin.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 
 const router = createBrowserRouter(
 	createRoutesFromElements(
 		<Route path="/" element={<Layout />}>
 			<Route path="login" element={<Login />} />
-			<Route element={<ProtectedRoute />}>
-				<Route path="" element={<AlumniList />} />
-				<Route path=":id" element={<AlumniPage />} />
+			<Route element={<PersistLogin />}>
+				<Route element={<ProtectedRoute />}>
+					<Route path="" element={<AlumniList />} />
+					<Route path=":id" element={<AlumniPage />} />
+				</Route>
 			</Route>
 		</Route>
 	)
 );
 function App() {
-	
-
 	return (
 		<>
 			<AuthProvider>
