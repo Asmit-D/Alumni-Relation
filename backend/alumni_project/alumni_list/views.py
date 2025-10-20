@@ -2,6 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework import status
+from rest_framework.pagination import PageNumberPagination
 from .models import *
 from .serializer import *
 from .permissions import IsEditor
@@ -13,7 +14,10 @@ class AlumniList(APIView):     #This class is used to get all the alumni details
         return [IsEditor()]
 
     def get(self, request):
-        alumni = Alumni.objects.all()
+        alumni = Alumni.objects.all().order_by("name")
+
+        paginator = PageNumberPagination()
+        paginator.page_size = 10
 
         search = request.GET.get("search", "")
         domains = request.GET.get("domains", "")
@@ -30,9 +34,17 @@ class AlumniList(APIView):     #This class is used to get all the alumni details
                 filtered_alumni.update(alumni.filter(domains__icontains=domain))
             alumni = list(filtered_alumni)
 
-        serializer = AlumniSerializer(alumni, many=True)
+        page = paginator.paginate_queryset(alumni, request)
+
+        pagination_data={
+            "total_pages": paginator.page.paginator.num_pages,
+            "has_next": paginator.page.has_next(),
+            "has_previous": paginator.page.has_previous(),
+        }
+
+        serializer = AlumniSerializer(page, many=True)
         choices = [choice[1] for choice in Alumni.DOMAIN_CHOICES]
-        return Response({ "alumni": serializer.data, "choices": choices })
+        return Response({ "alumni": serializer.data, "choices": choices, "pagination": pagination_data })
 
     def post(self, request):
         data=request.data.get("alumni").copy()

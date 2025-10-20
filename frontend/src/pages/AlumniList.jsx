@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserRound, X } from "lucide-react";
+import { UserRound, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Toggle } from "@/components/ui/toggle.jsx";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ export default function AlumniList() {
 	const [data, setData] = useState({});
 	const [search, setSearch] = useState("");
 	const [selectedChoices, setSelectedChoices] = useState([]);
+	const [currentPage, setCurrentPage] = useState(1);
 	const BASE_URL = import.meta.env.VITE_BASE_URL;
 
 	async function load() {
@@ -20,6 +21,7 @@ export default function AlumniList() {
 				params: {
 					search: search.length > 0 ? search : undefined,
 					domains: selectedChoices.length > 0 ? selectedChoices.join(",") : undefined,
+					page: currentPage,
 				},
 			});
 			setData(response.data);
@@ -31,7 +33,10 @@ export default function AlumniList() {
 	useEffect(() => {
 		console.log("Loading alumni data...");
 		load();
-	}, [search, selectedChoices]);
+		console.log(data.total_pages);
+		console.log(data.has_next);
+		console.log(data.has_previous);
+	}, [search, selectedChoices, currentPage]);
 
 	if (data === null) {
 		return (
@@ -45,6 +50,10 @@ export default function AlumniList() {
 	const Alumni = data?.alumni || [];
 	const choices = data?.choices || [];
 
+	const totalPages = data?.pagination?.total_pages || 1;
+	const hasNext = data?.pagination?.has_next || false;
+	const hasPrevious = data?.pagination?.has_previous || false;
+
 	const handleToggleChange = (choice) => {
 		setSelectedChoices((prev) => {
 			if (prev.includes(choice)) {
@@ -57,6 +66,14 @@ export default function AlumniList() {
 
 	const handleSearchChange = (e) => {
 		setSearch(e.target.value);
+		setCurrentPage(1); // Reset to first page on search
+	};
+
+	const handlePageChange = (newPage) => {
+		if (newPage >= 1 && newPage <= totalPages) {
+			setCurrentPage(newPage);
+			window.scrollTo({ top: 0, behavior: 'smooth' });
+		}
 	};
 
 	return (
@@ -188,16 +205,63 @@ export default function AlumniList() {
 						</div>
 					)}
 				</div>
+
 			{/* Pagination */}
-			{/* <div className='flex place-self-center bg-white/15 rounded-lg mb-8 '>
-        <button className='hover:bg-white/20 duration-200 rounded-lg active:bg-white/10'>
-          <ChevronLeft className='text-zinc-200' size={40} />
-        </button>
-        <div className='text-lg text-zinc-200 place-content-center px-4'>Page No.</div>
-        <button className='hover:bg-white/20 duration-200 rounded-lg active:bg-white/10'>
-          <ChevronRight className='text-zinc-200' size={40} />
-        </button>
-      </div> */}
+			{Alumni && Alumni.length > 0 && totalPages > 1 && (
+				<div className="flex justify-center items-center gap-2 mt-8">
+					<Button
+						onClick={() => handlePageChange(currentPage - 1)}
+						disabled={!hasPrevious}
+						className="backdrop-blur-md bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white/80 font-light rounded-full transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2"
+					>
+						<ChevronLeft className="h-5 w-5" />
+					</Button>
+					
+					<div className="flex items-center gap-2">
+						{/* Page numbers */}
+						{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+							// Show first page, last page, current page, and pages around current
+							if (
+								page === 1 ||
+								page === totalPages ||
+								(page >= currentPage - 1 && page <= currentPage + 1)
+							) {
+								return (
+									<Button
+										key={page}
+										onClick={() => handlePageChange(page)}
+										className={`backdrop-blur-md border transition-all duration-300 rounded-full min-w-[40px] h-10 px-3 font-light ${
+											page === currentPage
+												? 'bg-white/20 border-white/30 text-white'
+												: 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20 text-white/80'
+										}`}
+									>
+										{page}
+									</Button>
+								);
+							} else if (
+								page === currentPage - 2 ||
+								page === currentPage + 2
+							) {
+								return (
+									<span key={page} className="text-white/40 px-2">
+										...
+									</span>
+								);
+							}
+							return null;
+						})}
+					</div>
+
+					<Button
+						onClick={() => handlePageChange(currentPage + 1)}
+						disabled={!hasNext}
+						className="backdrop-blur-md bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white/80 font-light rounded-full transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed px-4 py-2"
+					>
+						<ChevronRight className="h-5 w-5" />
+					</Button>
+				</div>
+			)}
 		</div>
 	);
 }
