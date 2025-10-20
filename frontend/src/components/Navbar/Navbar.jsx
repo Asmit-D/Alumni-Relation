@@ -18,14 +18,25 @@ function Navbar() {
         .catch((error) => {console.log(error);})
     }
 return (
-    <>
-    <div className='flex bg-gray-900/90 place-content-between place-items-center border-y-8 border-x-8 border-gray-900 px-8 py-2'>
-        <Link to={'/'}>
-            <div className='text-5xl font-semibold text-zinc-100'>Alumni Module</div>
-        </Link>
-        <Button onClick={handleLogout} className={`place-content-center bg-white/10 ${token ? '' : 'hidden'}`}>LOGOUT</Button>
-    </div>
-    </>
+    <nav className='sticky top-0 z-50 backdrop-blur-xl bg-white/5 border-b border-white/10 shadow-lg shadow-black/20'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
+            <div className='flex justify-between items-center py-4'>
+                <Link to={'/'} className='group'>
+                    <h1 className='text-3xl md:text-4xl font-light text-white/90 tracking-wide transition-all duration-300 group-hover:text-white'>
+                        Alumni Module
+                    </h1>
+                </Link>
+                {token && (
+                    <Button 
+                        onClick={handleLogout} 
+                        className='backdrop-blur-md bg-white/10 hover:bg-white/20 border border-white/20 hover:border-white/30 text-white/90 font-light rounded-full px-6 py-2 transition-all duration-300 shadow-lg shadow-black/20 hover:shadow-xl hover:shadow-black/30'
+                    >
+                        Logout
+                    </Button>
+                )}
+            </div>
+        </div>
+    </nav>
 )
 }
 

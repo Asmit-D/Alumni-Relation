@@ -14,6 +14,22 @@ class AlumniList(APIView):     #This class is used to get all the alumni details
 
     def get(self, request):
         alumni = Alumni.objects.all()
+
+        search = request.GET.get("search", "")
+        domains = request.GET.get("domains", "")
+
+        # Filter by search
+        if search:
+            alumni = alumni.filter(name__icontains=search) | alumni.filter(current_company__icontains=search) | alumni.filter(residence__icontains=search)
+
+        # Filter by multiple domains
+        if domains:
+            domain_list = domains.split(",")
+            filtered_alumni = set()
+            for domain in domain_list:
+                filtered_alumni.update(alumni.filter(domains__icontains=domain))
+            alumni = list(filtered_alumni)
+
         serializer = AlumniSerializer(alumni, many=True)
         choices = [choice[1] for choice in Alumni.DOMAIN_CHOICES]
         return Response({ "alumni": serializer.data, "choices": choices })

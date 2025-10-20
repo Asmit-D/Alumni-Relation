@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { UserRound } from "lucide-react";
+import { UserRound, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Toggle } from "@/components/ui/toggle.jsx";
 import { Input } from "@/components/ui/input";
@@ -16,7 +16,12 @@ export default function AlumniList() {
 
 	async function load() {
 		try {
-			const response = await protectedAxios.get("alumni/");
+			const response = await protectedAxios.get("alumni/", {
+				params: {
+					search: search.length > 0 ? search : undefined,
+					domains: selectedChoices.length > 0 ? selectedChoices.join(",") : undefined,
+				},
+			});
 			setData(response.data);
 		} catch (error) {
 			console.log(error);
@@ -25,17 +30,14 @@ export default function AlumniList() {
 	}
 	useEffect(() => {
 		console.log("Loading alumni data...");
-
 		load();
-	}, []);
+	}, [search, selectedChoices]);
 
 	if (data === null) {
 		return (
-			<div className="bg-gray-900 min-h-screen">
-				<div className="flex flex-col rounded-t-xl px-20 pt-8 pb-2">
-					<div className="flex flex-row items-center justify-center text-3xl text-white/60 bg-white/15 border-t border-stone-800 px-4 py-2">
-						Unable to connect to server!!
-					</div>
+			<div className="flex items-center justify-center min-h-screen px-4">
+				<div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl px-8 py-6 shadow-2xl shadow-black/50">
+					<p className="text-xl text-white/80 font-light">Unable to connect to server</p>
 				</div>
 			</div>
 		);
@@ -58,130 +60,134 @@ export default function AlumniList() {
 	};
 
 	return (
-		<div className="bg-black min-h-screen">
-			<div className="flex flex-col  rounded-t-xl mx-15 pt-8 mb-2">
-				{/* Search bar */}
-				<div className="flex flex-row">
+		<div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+			{/* Search bar with glass effect */}
+			<div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-black/20 overflow-hidden">
+				<div className="relative flex items-center">
 					<Input
-						className="w-full text-white/90 rounded-t-lg rounded-b-none focus-visible:bg-white/15 bg-white/20 p-4"
+						className="w-full text-white/90 bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0 px-6 py-5 text-lg placeholder:text-white/40 pr-12"
 						type="text"
-						placeholder="Search for alumni"
+						placeholder="Search alumni..."
+						value={search}
 						onChange={(e) => handleSearchChange(e)}
 					/>
-				</div>
-
-				{/* Filter buttons */}
-				<div className="flex flex-row flex-wrap justify-between bg-white/20 border-t border-stone-800 px-4 py-2">
-					<div>
-						{choices.map((choice, index) => (
-							<Toggle
-								key={index}
-								pressed={selectedChoices.includes(choice)}
-								onPressedChange={() =>
-									handleToggleChange(choice)
-								}
-								className="text-zinc-200 rounded-full active:scale-[.97] duration-200 bg-white/15 place-self-center h-fit m-1 py-1 px-3"
-							>
-								{choice}
-							</Toggle>
-						))}
-					</div>
-					<div>
-						<Button
-							onClick={() => setSelectedChoices([])}
-							className="text-zinc-200 bg-white/15 rounded-full active:scale-[.97] duration-200 h-fit mx-1 py-1 px-3"
+					{search && (
+						<button
+							onClick={() => setSearch("")}
+							className="absolute right-3 p-2 text-white/60 hover:text-white/90 hover:bg-white/10 rounded-full transition-all duration-300"
+							aria-label="Clear search"
 						>
-							Clear
-						</Button>
+							<X size={20} />
+						</button>
+					)}
+				</div>
+			</div>
+
+			{/* Filter buttons with glass effect */}
+				<div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-black/20 p-4">
+					<div className="flex flex-wrap items-center gap-3">
+						<div className="flex flex-wrap gap-2 flex-1">
+							{choices.map((choice, index) => (
+								<Toggle
+									key={index}
+									pressed={selectedChoices.includes(choice)}
+									onPressedChange={() =>
+										handleToggleChange(choice)
+									}
+									className="text-white/80 font-light rounded-full transition-all duration-300 backdrop-blur-md bg-white/5 hover:bg-white/10 data-[state=on]:bg-white/20 data-[state=on]:text-white border border-white/10 hover:border-white/20 px-4 py-2 text-sm"
+								>
+									{choice}
+								</Toggle>
+							))}
+						</div>
+						{selectedChoices.length > 0 && (
+							<Button
+								onClick={() => setSelectedChoices([])}
+								className="text-white/80 font-light backdrop-blur-md bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 rounded-full transition-all duration-300 px-4 py-2 text-sm"
+							>
+								Clear all
+							</Button>
+						)}
 					</div>
 				</div>
 
 				{/* Alumni list */}
-				<ul>
-					{!Alumni ? (
-						<p className="text-muted-foreground">
-							Alumni not found
-						</p>
+				<div className="space-y-4">
+					{!Alumni || Alumni.length<1 ? (
+						<div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-2xl shadow-black/20 px-8 py-16">
+							<p className="text-center text-white/50 text-lg font-light">No alumni found</p>
+						</div>
 					) : (
-						<div>
-							{Alumni.filter(
-								(alumni) =>
-									alumni.name
-										.toLowerCase()
-										.includes(search.toLowerCase()) &&
-									(selectedChoices.length === 0 ||
-										(typeof alumni.domains === "string"
-											? selectedChoices.includes(
-													alumni.domains
-											  )
-											: alumni.domains.some((domain) =>
-													selectedChoices.includes(
-														domain
-													)
-											  )))
-							).map((alumni) => (
+						<div className="space-y-3">
+							{Alumni.map((alumni) => (
 								<Link key={alumni.id} to={`/${alumni.id}`}>
-									<li className="flex items-center bg-gray-900 active:bg-white/10 active:scale-[.994] hover:bg-white/20 duration-200 border border-stone-800 p-4">
-										<div className="rounded-full flex-none overflow-hidden text-zinc-200">
-											<Avatar className="h-16 w-16 md:h-20 md:w-20">
-												{alumni.dp ? (
-													<div>
-														<AvatarImage
-															src={`${BASE_URL}${alumni.dp}`}
-															className="object-cover"
-															alt={alumni.name}
-														/>
-														<AvatarFallback className="">
-															{" "}
-															<UserRound
-																size={30}
-															/>{" "}
+									<div className="group backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl shadow-xl shadow-black/20 hover:bg-white/10 hover:border-white/20 hover:shadow-2xl hover:shadow-black/30 transition-all duration-300 p-6 mb-2">
+										<div className="flex items-center gap-6">
+											{/* Avatar */}
+											<div className="flex-none">
+												<Avatar className="h-16 w-16 md:h-20 md:w-20 ring-2 ring-white/10 group-hover:ring-white/20 transition-all duration-300">
+													{alumni.dp ? (
+														<>
+															<AvatarImage
+																src={`${BASE_URL}${alumni.dp}`}
+																className="object-cover"
+																alt={alumni.name}
+															/>
+															<AvatarFallback className="bg-white/10 text-white/60">
+																<UserRound size={30} />
+															</AvatarFallback>
+														</>
+													) : (
+														<AvatarFallback className="bg-white/10 text-white/60">
+															<UserRound size={30} />
 														</AvatarFallback>
-													</div>
-												) : (
-													<AvatarFallback className="">
-														{" "}
-														<UserRound
-															size={30}
-														/>{" "}
-													</AvatarFallback>
-												)}
-											</Avatar>
-										</div>
-										<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pl-5 w-full">
-											<div className="font-medium text-2xl text-zinc-200">
-												{alumni.name}{" "}
-												<span className="text-zinc-400 font-medium text-sm">
-													{alumni.batch}
-												</span>
+													)}
+												</Avatar>
 											</div>
-										</div>
-										<div className="basis-[30%] flex flex-wrap">
-											{typeof alumni.domains ===
-											"string" ? (
-												<div className="text-zinc-200 rounded-full bg-white/15 place-self-center h-fit m-1 px-2">
-													{alumni.domains}
+											
+											{/* Info */}
+											<div className="flex-1 min-w-0">
+												<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+													<div>
+														<h3 className="font-medium text-xl text-white/90 truncate">
+															{alumni.name}
+														</h3>
+														<p className="text-white/50 text-sm font-light mt-0.5">
+															Batch of {alumni.batch}
+														</p>
+													</div>
 												</div>
-											) : (
-												alumni.domains.map(
-													(domain, index) => (
-														<div
+											</div>
+
+											{/* Domains */}
+											<div className="hidden md:flex flex-wrap gap-2 max-w-xs">
+												{typeof alumni.domains === "string" ? (
+													<span className="text-white/70 text-xs font-light rounded-full backdrop-blur-md bg-white/10 border border-white/10 px-3 py-1">
+														{alumni.domains}
+													</span>
+												) : (
+													alumni.domains.slice(0, 3).map((domain, index) => (
+														<span
 															key={index}
-															className="text-zinc-200 rounded-full bg-white/15 place-self-center h-fit m-1 px-3"
+															className="text-white/70 text-xs font-light rounded-full backdrop-blur-md bg-white/10 border border-white/10 px-3 py-1"
 														>
 															{domain}
-														</div>
-													)
-												)
-											)}
+														</span>
+													))
+												)}
+												{typeof alumni.domains !== "string" && alumni.domains.length > 3 && (
+													<span className="text-white/50 text-xs font-light rounded-full backdrop-blur-md bg-white/10 border border-white/10 px-3 py-1">
+														+{alumni.domains.length - 3}
+													</span>
+												)}
+											</div>
 										</div>
-									</li>
+									</div>
 								</Link>
 							))}
 						</div>
 					)}
-				</ul>
-			</div>
+				</div>
 			{/* Pagination */}
 			{/* <div className='flex place-self-center bg-white/15 rounded-lg mb-8 '>
         <button className='hover:bg-white/20 duration-200 rounded-lg active:bg-white/10'>
@@ -195,21 +201,3 @@ export default function AlumniList() {
 		</div>
 	);
 }
-
-// export async function alumniLoader() {
-//   const token = localStorage.getItem('token');
-//   if (!token) {
-//     return null; // or redirect to login page
-//   }
-//   try {
-//     const response = await axiosInstance.get('alumni/', {
-//       headers: {
-//         'Authorization': `Bearer ${token}`
-//       }
-//     });
-//     return response.data;
-//   } catch (error) {
-//     console.log(error);
-//     return null;
-//   }
-// }

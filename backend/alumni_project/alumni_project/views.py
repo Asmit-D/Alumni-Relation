@@ -56,5 +56,5 @@ class RefreshAccessToken(APIView):
 class Logout(APIView):
     def post(self, request):
         response = JsonResponse({"message": "Logged out"})
-        response.delete_cookie("refresh_token", path='/token/refresh/')
+        response.delete_cookie("refresh_token", path='/token/refresh/', samesite='None')
         return response
