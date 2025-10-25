@@ -2,8 +2,9 @@ from urllib import response
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.core.cache import cache
 from django.http import JsonResponse
 
@@ -14,8 +15,6 @@ class Login(APIView):
         user = authenticate(request, username=username, password=password)
 
         if user is not None:
-            login(request, user)
-
             refresh = RefreshToken.for_user(user)
             is_editor = user.groups.filter(name="Editor").exists()
 
@@ -47,9 +46,13 @@ class RefreshAccessToken(APIView):
         try:
             refresh = RefreshToken(refresh_token)
             new_access = refresh.access_token
+            user = JWTAuthentication().get_user(refresh)
+            is_editor = user.groups.filter(name="Editor").exists()
             return Response({
                 "access": str(new_access),
+                "is_editor": is_editor
                 })
+
         except Exception:
             return Response({"detail": "Invalid or expired refresh token"}, status=403)
 

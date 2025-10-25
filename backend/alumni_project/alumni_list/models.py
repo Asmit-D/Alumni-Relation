@@ -5,7 +5,7 @@ import uuid
 class Alumni(models.Model):
     id=models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
-    dp = models.ImageField(upload_to='profile_pics/', blank=True, null=True)
+    dp = models.URLField(blank=True, null=True)
     batch = models.IntegerField()
     email = models.EmailField(unique=True)
     twitter = models.URLField(blank=True, null=True)

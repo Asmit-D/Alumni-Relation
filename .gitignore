@@ -64,3 +64,4 @@ yarn-error.log*
 # Misc
 .DS_Store
 *.swp
+backend/alumni_project/alumni_list/migrations/0002_alter_alumni_dp.py

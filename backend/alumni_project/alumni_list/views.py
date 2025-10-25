@@ -1,8 +1,11 @@
+from django.utils import timezone
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from rest_framework.pagination import PageNumberPagination
+import cloudinary.utils
+from django.conf import settings
 from .models import *
 from .serializer import *
 from .permissions import IsEditor
@@ -10,7 +13,7 @@ class AlumniList(APIView):     #This class is used to get all the alumni details
 
     def get_permissions(self):
         if self.request.method == "GET":
-            return [AllowAny()]
+            return [IsAuthenticated()]
         return [IsEditor()]
 
     def get(self, request):
@@ -47,29 +50,48 @@ class AlumniList(APIView):     #This class is used to get all the alumni details
         return Response({ "alumni": serializer.data, "choices": choices, "pagination": pagination_data })
 
     def post(self, request):
-        data=request.data.get("alumni").copy()
-        data["dp"]=request.FILES.get("dp")
-        Alumniserializer = AlumniSerializer(data=data)
-        if Alumniserializer.is_valid():
-            Alumniserializer.save()
-            EntranceExamserializer = EntranceExamSerializer(data=request.data.get("entrance_exam"))
-            Educationserializer = EducationSerializer(data=request.data.get("education"))
-            WorkProfileserializer = WorkProfileSerializer(data=request.data.get("work_profile"))
-            if EntranceExamserializer.is_valid() :
-                return Response(EntranceExamserializer.save())
-            if Educationserializer.is_valid() :
-                return Response(Educationserializer.save())
-            if WorkProfileserializer.is_valid() :
-                return Response(WorkProfileserializer.save())
-            
-            return Response({ "alumni": Alumniserializer.data, 
-                            "entrance_exam": EntranceExamserializer.data if EntranceExamserializer.is_valid() else None, 
-                            "education": Educationserializer.data if Educationserializer.is_valid() else None,
-                            "work_profile": WorkProfileserializer.data if WorkProfileserializer.is_valid() else None,
-                            }, status=status.HTTP_201_CREATED)
-        return Response(Alumniserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        data=request.data
+        alumni=data.get("alumni")
+        if alumni["dp"]:
+            alumni["dp"]=f"https://res.cloudinary.com/{settings.CLOUDINARY_STORAGE['CLOUD_NAME']}/image/upload/{alumni['dp']}"
+        Alumniserializer = AlumniSerializer(data=alumni)
+        if not Alumniserializer.is_valid():
+            return Response(Alumniserializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+        alumni_instance=Alumniserializer.save()
+        res={ "alumni": Alumniserializer.data }
+
+        EntranceExamserializer = EntranceExamSerializer(data=data.get("entrance_exam"))
+        Educationserializer = EducationSerializer(data=data.get("education"))
+        WorkProfileserializer = WorkProfileSerializer(data=data.get("work_profile"))
+
+        if EntranceExamserializer.is_valid() :
+            EntranceExamserializer.save(id=alumni_instance)
+            res["entrance_exam"] = EntranceExamserializer.data
+        else:
+            print(EntranceExamserializer.errors)
+            res["entrance_exam_errors"] = EntranceExamserializer.errors
+        if Educationserializer.is_valid() :
+            Educationserializer.save(id=alumni_instance)
+            res["education"] = Educationserializer.data
+        else:
+            print(Educationserializer.errors)
+            res["education_errors"] = Educationserializer.errors
+        if WorkProfileserializer.is_valid() :
+            WorkProfileserializer.save(id=alumni_instance)
+            res["work_profile"] = WorkProfileserializer.data
+        else:
+            print(WorkProfileserializer.errors)
+            res["work_profile_errors"] = WorkProfileserializer.errors
+        return Response(res, status=status.HTTP_201_CREATED)
 
 class Alumnidetail(APIView):    #This class is used to get the details of a particular alumni with the entrance exam, education and work profile details
+    
+    def get_permissions(self):
+        if self.request.method == "GET":
+            return [IsAuthenticated()]
+        return [IsEditor()]
+    
     def get_object(self, pk, model):
         try:
             return model.objects.get(pk=pk)
@@ -94,7 +116,7 @@ class Alumniview(APIView):       #This class is used to update and delete alumni
     def get_permissions(self):
         if self.request.method == "PUT" or self.request.method == "DELETE":
             return [IsEditor()]
-        return [AllowAny()]
+        return [IsAuthenticated()]
     
     def get_object(self, pk):
         try:
@@ -126,7 +148,7 @@ class EntranceExamview(APIView):    #This class is used to add, update and delet
     def get_permissions(self):
         if self.request.method == "PUT" or self.request.method == "DELETE" or self.request.method == "POST" :
             return [IsEditor()]
-        return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_object(self, pk):
         try:
@@ -166,7 +188,7 @@ class Educationview(APIView):     #This class is used to add, update and delete 
     def get_permissions(self):
         if self.request.method == "PUT" or self.request.method == "DELETE" or self.request.method == "POST" :
             return [IsEditor()]
-        return [AllowAny()]
+        return [IsAuthenticated()]
 
     def get_object(self, pk):
         try:
@@ -206,7 +228,7 @@ class WorkProfileview(APIView):     #This class is used to add, update and delet
     def get_permissions(self):
         if self.request.method == "PUT" or self.request.method == "DELETE" or self.request.method == "POST" :
             return [IsEditor()]
-        return [AllowAny()]
+        return [IsAuthenticated()]
     
     def get_object(self, pk):
         try:
@@ -240,3 +262,30 @@ class WorkProfileview(APIView):     #This class is used to add, update and delet
             work_profile.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response({ "error": "Work Profile not found" }, status=status.HTTP_404_NOT_FOUND)
+
+class CloudinarySignatureView(APIView):
+
+    def get_permissions(self):
+        return [IsEditor()]
+
+    def get(self, request):
+        timestamp = int(timezone.now().timestamp())
+        params_to_sign = {
+            "timestamp": timestamp,
+            "folder": "alumni_module",
+        }
+
+        print("Params to sign:", params_to_sign)  # Debugging log
+        print("API_SECRET:", settings.CLOUDINARY_STORAGE['API_SECRET'])  # Debugging log
+
+        signature = cloudinary.utils.api_sign_request(
+            params_to_sign,
+            settings.CLOUDINARY_STORAGE['API_SECRET']
+        )
+
+        return Response({
+            "cloud_name": settings.CLOUDINARY_STORAGE['CLOUD_NAME'],
+            "api_key": settings.CLOUDINARY_STORAGE['API_KEY'],
+            "timestamp": timestamp,
+            "signature": signature,
+        })

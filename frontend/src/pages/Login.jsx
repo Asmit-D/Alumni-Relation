@@ -11,7 +11,7 @@ export default function LoginPage() {
 		handleSubmit,
 		formState: { errors, isSubmitting },
 	} = useForm();
-	const { token, setToken } = useAuth();
+	const { setIsEditor, setToken } = useAuth();
 	const from = location.state?.from?.pathname || "/";
 	const navigate = useNavigate();
 	const [apiError, setApiError] = useState(null);
@@ -29,10 +29,7 @@ export default function LoginPage() {
 
 			if (response.status === 200) {
 				setToken(response.data.access);
-				console.log(
-					"Login successful, token set:",
-					response.data.access
-				);
+				setIsEditor(response.data.is_editor);
 				navigate(from, { replace: true });
 			}
 		} catch (err) {

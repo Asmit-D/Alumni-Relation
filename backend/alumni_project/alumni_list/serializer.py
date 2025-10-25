@@ -18,6 +18,10 @@ class WorkProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class AlumniSerializer(serializers.ModelSerializer):
+    domains = serializers.ListField(
+        child=serializers.ChoiceField(choices=[choice[0] for choice in Alumni.DOMAIN_CHOICES]),
+        required=False
+    )
     class Meta:
         model = Alumni
         fields = '__all__'

@@ -48,7 +48,7 @@ export default function AlumniPage() {
           {/* Avatar and Social Links */}
           <div className="flex flex-col items-center md:items-start gap-6">
             <Avatar className="h-32 w-32 md:h-40 md:w-40 ring-4 ring-white/10">
-              <AvatarImage src={`${BASE_URL+data.alumni?.dp}`} className="object-cover" alt={data.alumni?.name} />
+              <AvatarImage src={`${data.alumni?.dp}`} className="object-cover" alt={data.alumni?.name} />
               <AvatarFallback className="text-2xl bg-white/10 text-white/60">{data.alumni?.name}</AvatarFallback>
             </Avatar>
 
@@ -230,24 +230,3 @@ export default function AlumniPage() {
     </div>
   )
 }
-
-// export async function alumniPageLoader({params}) {
-//   const token = localStorage.getItem('token');
-//   if (!token) {
-//     return null; // Handle missing token
-//   }
-//   if (!params.id) {
-//     return null; // Handle missing ID
-//   }
-//   try {
-//     const response = await axiosInstance.get(`alumni/${params.id}/`,{
-//       headers: {
-//         'Authorization': `Bearer ${token}`
-//       }
-//     });
-//     return response.data;
-//   } catch (error) {
-//     console.log(error);
-//     return null;
-//   }
-// }
